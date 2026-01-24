@@ -1,0 +1,56 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =========================
+# Virtual Environment
+# =========================
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+
+# =========================
+# PyCharm / IntelliJ
+# =========================
+.idea/
+*.iml
+
+# =========================
+# Logs & runtime files
+# =========================
+*.log
+logs/
+*.pid
+*.seed
+
+# =========================
+# OS generated files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Test / coverage
+# =========================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =========================
+# Build artifacts
+# =========================
+build/
+dist/
+*.egg-info/
