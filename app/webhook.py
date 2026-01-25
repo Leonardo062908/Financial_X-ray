@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 
@@ -16,9 +16,9 @@ GRAPH_API_VERSION = os.getenv("GRAPH_API_VERSION", "v20.0")
 
 @router.get("/webhook")
 def verify_webhook(
-        hub_mode: str = "",
-        hub_challenge: str = "",
-        hub_verify_token: str = ""
+        hub_mode: str = Query(alias="hub.mode"),
+        hub_challenge: str = Query(alias="hub.challenge"),
+        hub_verify_token: str = Query(alias="hub.verify_token")
 ):
     #Meta WebHook verification handshake
     if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
@@ -32,7 +32,7 @@ async def receive_webhook(request: Request):
     #Log completo do payload real do WhatsApp:
     print("=== INCOMING WEBHOOK ===")
     print(json.dumps(body, indent=2, ensure_ascii=False))
-    return {"status:" "ok"}
+    return {"status": "ok"}
 
 async def try_auto_reply(body: dict):
     """
