@@ -1,0 +1,80 @@
+import os
+import json
+import requests
+from fastapi import APIRouter, Request
+from fastapi.responses import PlainTextResponse
+from dotenv import load_dotenv
+
+load_dotenv()
+
+router = APIRouter()
+
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "")
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID", "")
+GRAPH_API_VERSION = os.getenv("GRAPH_API_VERSION", "v20.0")
+
+@router.get("/webhook")
+def verify_webhook(
+        hub_mode: str = "",
+        hub_challenge: str = "",
+        hub_verify_token: str = ""
+):
+    #Meta WebHook verification handshake
+    if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
+        return PlainTextResponse(content=hub_challenge, status_code=200)
+    return PlainTextResponse(content="Verification Failed", status_code=403)
+
+@router.post("/webhook")
+async def receive_webhook(request: Request):
+    body = await request.json()
+
+    #Log completo do payload real do WhatsApp:
+    print("=== INCOMING WEBHOOK ===")
+    print(json.dumps(body, indent=2, ensure_ascii=False))
+    return {"status:" "ok"}
+
+async def try_auto_reply(body: dict):
+    """
+    Extrai a mensagem e responde automaticamente.
+    Sendo esse o 'echo bot' básico.
+    """
+    entry = body.get("entry", [])
+    if not entry:
+        return
+
+    changes = entry[0].get("changes", [])
+    if not changes:
+        return
+
+    value = changes[0].get("value", {})
+    messages = value.get("messages", [])
+    if not messages:
+        return
+
+    msg = messages[0]
+    from_number = msg.get("from") #Telefone do usuário que enviou a mensagem
+    msg_body = msg.get("type")
+
+    #Apenas respondendo a mensagens de texto
+    if msg_body != "text":
+        text = "Recebi seu arquivo!✅ Já vou analisar e te retorno em breve.⏳"
+    else:
+        text = "Recebi ✅ Me envie sua fatura (PDF ou imagem) e em 1 frase sua maior dor financeira no momento."
+    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    paylod = {
+        "messaging_product": "whatsapp",
+        "to": from_number,
+        "type": "text",
+        "text": {
+            "body": text
+        },
+    }
+
+    r = requests.post(url, headers=headers, json=paylod, timeout=20)
+    print("SEND STATUS:", r.status_code, r.text)
+    r.raise_for_status()
