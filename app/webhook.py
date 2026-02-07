@@ -29,9 +29,14 @@ def verify_webhook(
 async def receive_webhook(request: Request):
     body = await request.json()
 
-    #Log completo do payload real do WhatsApp:
     print("=== INCOMING WEBHOOK ===")
     print(json.dumps(body, indent=2, ensure_ascii=False))
+
+    try:
+        await try_auto_reply(body)
+    except Exception as e:
+        print("AUTO_REPLY_ERROR:", str(e))
+
     return {"status": "ok"}
 
 async def try_auto_reply(body: dict):
@@ -66,7 +71,7 @@ async def try_auto_reply(body: dict):
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
         "Content-Type": "application/json",
     }
-    paylod = {
+    payload = {
         "messaging_product": "whatsapp",
         "to": from_number,
         "type": "text",
@@ -75,6 +80,6 @@ async def try_auto_reply(body: dict):
         },
     }
 
-    r = requests.post(url, headers=headers, json=paylod, timeout=20)
+    r = requests.post(url, headers=headers, json=payload, timeout=20)
     print("SEND STATUS:", r.status_code, r.text)
     r.raise_for_status()
