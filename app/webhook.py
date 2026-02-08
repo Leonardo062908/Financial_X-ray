@@ -4,6 +4,7 @@ import requests
 from fastapi import APIRouter, Request, Query
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -16,13 +17,13 @@ GRAPH_API_VERSION = os.getenv("GRAPH_API_VERSION", "v20.0")
 
 @router.get("/webhook")
 def verify_webhook(
-        hub_mode: str = Query(alias="hub.mode"),
-        hub_challenge: str = Query(alias="hub.challenge"),
-        hub_verify_token: str = Query(alias="hub.verify_token")
+    hub_mode: Optional[str] = Query(default=None, alias="hub.mode"),
+    hub_challenge: Optional[str] = Query(default=None, alias="hub.challenge"),
+    hub_verify_token: Optional[str] = Query(default=None, alias="hub.verify_token"),
 ):
-    #Meta WebHook verification handshake
-    if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN:
+    if hub_mode == "subscribe" and hub_verify_token == VERIFY_TOKEN and hub_challenge:
         return PlainTextResponse(content=hub_challenge, status_code=200)
+
     return PlainTextResponse(content="Verification Failed", status_code=403)
 
 @router.post("/webhook")
