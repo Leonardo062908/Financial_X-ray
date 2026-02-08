@@ -30,13 +30,7 @@ def verify_webhook(
 async def receive_webhook(request: Request):
     body = await request.json()
 
-    print("=== INCOMING WEBHOOK ===")
-    print(json.dumps(body, indent=2, ensure_ascii=False))
-
-    try:
-        await try_auto_reply(body)
-    except Exception as e:
-        print("AUTO_REPLY_ERROR:", str(e))
+    await try_auto_reply(body)
 
     return {"status": "ok"}
 
@@ -54,9 +48,11 @@ async def try_auto_reply(body: dict):
         return
 
     value = changes[0].get("value", {})
-    messages = value.get("messages", [])
-    if not messages:
-        return
+    metadata = value.get("metadata", {})
+    incoming_phone_number_id = metadata.get("phone_number_id")
+
+    if incoming_phone_number_id != PHONE_NUMBER_ID:
+        return  # ignora eventos fake/teste
 
     msg = messages[0]
     from_number = msg.get("from") #Telefone do usuário que enviou a mensagem
